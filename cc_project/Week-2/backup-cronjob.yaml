@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup-cronjob
+spec:
+  schedule: "0 0 * * *"  # Run every hour
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup-container
+            image: backup-service:tag  # Set your image name and tag here
+            command: ["python","backup_script.py"]
+            env:
+            - name: CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: api-credentials
+                  key: CLIENT_ID
+            - name: CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: api-credentials
+                  key: CLIENT_SECRET
+            - name: REFRESH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: api-credentials
+                  key: REFRESH_TOKEN
+            volumeMounts:
+            - name: data-volume
+              mountPath: /data
+          restartPolicy: OnFailure
+          volumes:
+          - name: data-volume
+            persistentVolumeClaim:
+              claimName: my-pvc
+
+
+
+
